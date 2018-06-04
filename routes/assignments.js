@@ -39,14 +39,24 @@ router.get('/', function(req, res, next) {
 	});
 });
 
-router.get('/images/:id', function(req, res, next) {
+//Get image by id
+router.get('/image/:id', function(req, res, next) {
 	var id = req.params.id;
-	database.query('SELECT * FROM opdracht_afbeelding WHERE opdrachtid = ?', id).then(rows => { 
-		console.log(rows);
+	database.query('SELECT pad FROM opdracht_afbeelding WHERE OpdrachtAfbeeldingID = ?', id).then(row => {
+		res.sendFile(path.resolve(row[0].pad));
+	});
+});
+
+//Get image data by assignmentid
+router.get('/imagedata/:id', function(req, res, next) {
+	var id = req.params.id;
+	database.query('SELECT * FROM opdracht_afbeelding WHERE opdrachtid = ?', id).then(rows => {
 		res.send(JSON.stringify(rows));
 	});
 });
 
+
+//Delete assignment by assignmentid
 router.get('/delete/:id', function(req, res, next) {
 	var id = req.params.id;
 	database.query('DELETE FROM opdracht WHERE OpdrachtID = ?',id).then(rows => { 
@@ -54,6 +64,7 @@ router.get('/delete/:id', function(req, res, next) {
 	});
 });
 
+//Get all possible assignment status
 router.get('/statuses', function(req, res, next) {
 	database.query('SELECT * FROM opdracht_status').then(rows => { 
 		console.log(rows);
@@ -61,7 +72,7 @@ router.get('/statuses', function(req, res, next) {
 	});
 });
 
-
+///Get assignment by id
 router.get('/:id', function(req, res, next) {
 	var id = req.params.id;
 	let assignments;
@@ -70,6 +81,7 @@ router.get('/:id', function(req, res, next) {
 	});
 });
 
+//Update assignment
 router.post('/update/:id',upload.single('opdrachtAfbeelding'), function(req, res, next) {
 	var id = req.params.id;
 	var body = req.body;
@@ -86,6 +98,7 @@ router.post('/update/:id',upload.single('opdrachtAfbeelding'), function(req, res
 	}
 });
 
+//Post new assignment
 router.post('/post', upload.single('opdrachtAfbeelding'),function(req, res, next) {
 	var body = req.body;
 	console.log(req.file);
@@ -95,6 +108,7 @@ router.post('/post', upload.single('opdrachtAfbeelding'),function(req, res, next
 	});
 });
 
+//Upload assignmentimage by assignmentid
 router.post('/uploadimage/:id', upload.single('opdrachtAfbeelding'),function(req, res, next) {
 	var id = req.params.id;
 	database.query("INSERT INTO opdracht_afbeelding (pad, opdrachtid) VALUES (?,?)", [req.file.path, id]).then(rows => { 
@@ -102,7 +116,8 @@ router.post('/uploadimage/:id', upload.single('opdrachtAfbeelding'),function(req
 	});
 });
 
-router.get('/deleteimage/:id', function(req, res, next) {
+//Delete all images by assignmentid
+router.get('/deleteimages/:id', function(req, res, next) {
 	var id = req.params.id;
 	database.query("SELECT pad FROM opdracht_afbeelding WHERE OpdrachtAfbeeldingID = ?", [id]).then(rows => {
 		fs.unlink(path.resolve(rows[0].pad));
@@ -110,31 +125,18 @@ router.get('/deleteimage/:id', function(req, res, next) {
 	}).then(rows =>{
 		res.send(JSON.stringify(rows));
 	});
-	
 });
 
-function getImagePath(itemId, imageId) {
-    var filePath = uploadDir + itemId + '_' + imageId;
-    return path.resolve(filePath);
-}
-
-
+//Upload multiple images by id
+router.post('/uploadimages/:id', upload.array("opdrachtAfbeeldingen"),function(req, res, next){
+	var id = req.params.id;
+	console.log(req.files);
+	req.files.forEach(file => {
+		console.log(file);
+		database.query("INSERT INTO opdracht_afbeelding (pad, opdrachtid) VALUES (?,?)", [file.path, id]).then(rows => { 
+		});
+	});
+	res.send(JSON.stringify(rows));
+});
 
 module.exports = router;
-
-// get status and company for an array of assignments
-// async function processAssignments(array){
-// 	let assignments = [];
-// 	for	(const item of array){
-// 		let assignment;
-// 		await database.query('SELECT * FROM opdracht_status WHERE ID = ?', item.statusID).then(row => {
-// 			item.status = row;
-// 			return database.query('SELECT * FROM bedrijf WHERE ID = ?', item.bedrijfID);
-// 		}).then(row => {
-// 			item.bedrijf = row;
-// 			assignment = item;
-// 			assignments.push(assignment);
-// 		});
-// 	}
-// 	return assignments;
-// }
