@@ -14,6 +14,7 @@ const storage = multer.diskStorage({
 	},
 	filename: function (req, file, cb) {
 		crypto.pseudoRandomBytes(16, function (err, raw) {
+			console.log(file.originalname);
 		  cb(null, raw.toString('hex') + Date.now() + file.originalname);
 		});
 	}
@@ -47,13 +48,6 @@ router.get('/image/:id', function(req, res, next) {
 	});
 });
 
-//Get image data by assignmentid
-router.get('/imagedata/:id', function(req, res, next) {
-	var id = req.params.id;
-	database.query('SELECT * FROM opdracht_afbeelding WHERE opdrachtid = ?', id).then(rows => {
-		res.send(JSON.stringify(rows));
-	});
-});
 
 
 //Delete assignment by assignmentid
@@ -116,8 +110,17 @@ router.post('/uploadimage/:id', upload.single('opdrachtAfbeelding'),function(req
 	});
 });
 
-//Delete all images by assignmentid
-router.get('/deleteimages/:id', function(req, res, next) {
+
+//Get image data by assignmentid
+router.get('/imagedata/:id', function(req, res, next) {
+	var id = req.params.id;
+	database.query('SELECT * FROM opdracht_afbeelding WHERE opdrachtid = ?', id).then(rows => {
+		res.send(JSON.stringify(rows));
+	});
+});
+
+//Delete image by imageid
+router.get('/deleteimage/:id', function(req, res, next) {
 	var id = req.params.id;
 	database.query("SELECT pad FROM opdracht_afbeelding WHERE OpdrachtAfbeeldingID = ?", [id]).then(rows => {
 		fs.unlink(path.resolve(rows[0].pad));
@@ -127,6 +130,7 @@ router.get('/deleteimages/:id', function(req, res, next) {
 	});
 });
 
+
 //Upload multiple images by id
 router.post('/uploadimages/:id', upload.array("opdrachtAfbeeldingen"),function(req, res, next){
 	var id = req.params.id;
@@ -134,9 +138,10 @@ router.post('/uploadimages/:id', upload.array("opdrachtAfbeeldingen"),function(r
 	req.files.forEach(file => {
 		console.log(file);
 		database.query("INSERT INTO opdracht_afbeelding (pad, opdrachtid) VALUES (?,?)", [file.path, id]).then(rows => { 
+			
 		});
 	});
-	res.send(JSON.stringify(rows));
+	res.send(JSON.stringify({true: true}));
 });
 
 module.exports = router;

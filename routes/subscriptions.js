@@ -30,5 +30,22 @@ router.post('/post/', function(req, res, next) {
 	});
 });
 
+router.post('/update/:id', function(req, res, next) {
+	console.log(req.body);
+	var body = req.body;
+	var id = req.params.id;
+	database.query("UPDATE intekening SET intekeningstatusid = ? WHERE IntekeningID = ?", [body.IntekeningSID, id]).then(rows => { 
+		res.send(JSON.stringify(rows));
+	});
+});
+
+router.get('/status/all', function(req, res, next) {
+	console.log("testststs");
+	database.query('SELECT * FROM intekening_status').then(rows => { 
+		console.log(rows);
+		res.send(JSON.stringify(rows));
+	});
+});
+
 
 module.exports = router;
