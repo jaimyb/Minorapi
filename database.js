@@ -12,9 +12,9 @@ class Database {
     query( sql, args ) {
         return new Promise( ( resolve, reject ) => {
             var query = this.connection.query( sql, args, ( err, rows ) => {
-                console.log(args);
-                if ( err )
-                    return reject( err );
+                if ( err ){
+                    reject(err);
+                }
                 resolve( rows );
             } );
             console.log(query.sql);

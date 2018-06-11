@@ -34,6 +34,7 @@ let database = new Database();
 
 //Get all assignments
 router.get('/', function(req, res, next) {
+	console.log(req.headers);
 	database.query('SELECT * FROM opdracht LEFT JOIN opdracht_status ON opdracht.opdrachtstatusid = opdracht_status.OpdrachtSID LEFT JOIN bedrijf ON opdracht.bedrijfid = bedrijf.BedrijfID').then(rows => { 
 		console.log(rows);
 		res.send(JSON.stringify(rows));

@@ -8,7 +8,7 @@ let database = new Database();
 router.get('/byproject/:id', function(req, res, next) {
     var id = req.params.id;
 
-	database.query('SELECT student.StudentID, student.voornaam, student.achternaam, student.studentnummer, student.klas, student.studentemail FROM student JOIN (SELECT * FROM intekening WHERE intekening.opdrachtid = ? AND intekening.intekeningstatusid = 1) AS test', id).then(rows => { 
+	database.query('SELECT student.StudentID, student.voornaam, student.achternaam, student.studentnummer, student.klas, student.studentemail FROM student JOIN (SELECT * FROM intekening WHERE intekening.opdrachtid = ? AND intekening.intekeningstatusid = 1) AS test ON student.StudentID = test.studentid', id).then(rows => { 
 		res.send(JSON.stringify(rows));
 	});
 });
