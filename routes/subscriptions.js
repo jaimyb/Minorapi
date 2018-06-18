@@ -5,7 +5,7 @@ var Database = require('../database.js');
 
 let database = new Database();
 
-router.get('/:id', function(req, res, next) {
+router.get('/byid/:id', function(req, res, next) {
     var id = req.params.id;
 	database.query('SELECT * FROM (SELECT * FROM intekening WHERE IntekeningID = ?) AS i left JOIN intekening_status ON i.intekeningstatusid = intekening_status.IntekeningSID left JOIN opdracht on opdracht.OpdrachtID = i.opdrachtid left join student on student.StudentID = i.studentID left join bedrijf on bedrijf.BedrijfID = opdracht.bedrijfid left join opdracht_status ON opdracht_status.OpdrachtSID = opdracht.opdrachtstatusid', id).then(rows => { 
 		console.log(rows);
@@ -13,10 +13,32 @@ router.get('/:id', function(req, res, next) {
 	});
 });
 
+router.get('/bystudent/:id', function(req, res, next) {
+    var id = req.params.id;
+	database.query('SELECT * FROM (SELECT * FROM intekening WHERE studentid = ?) AS i left JOIN intekening_status ON i.intekeningstatusid = intekening_status.IntekeningSID left JOIN opdracht on opdracht.OpdrachtID = i.opdrachtid left join student on student.StudentID = i.studentID left join bedrijf on bedrijf.BedrijfID = opdracht.bedrijfid left join opdracht_status ON opdracht_status.OpdrachtSID = opdracht.opdrachtstatusid', id).then(rows => { 
+		console.log(rows);
+		res.send(JSON.stringify(rows));
+	});
+});
+
+router.get('/bycompany/:id', function(req, res, next) {
+    var id = req.params.id;
+	database.query('SELECT * FROM intekening AS i left JOIN intekening_status ON i.intekeningstatusid = intekening_status.IntekeningSID left JOIN opdracht on opdracht.OpdrachtID = i.opdrachtid left join student on student.StudentID = i.studentID left join bedrijf on bedrijf.BedrijfID = opdracht.bedrijfid left join opdracht_status ON opdracht_status.OpdrachtSID = opdracht.opdrachtstatusid WHERE bedrijf.BedrijfID = ?', id).then(rows => { 
+		console.log(rows);
+		res.send(JSON.stringify(rows));
+	});
+});
 
 router.get('/byassignment/:id', function(req, res, next) {
     var id = req.params.id;
 	database.query('SELECT * FROM (SELECT * FROM intekening WHERE opdrachtid = ?) AS i left JOIN intekening_status ON i.intekeningstatusid = intekening_status.IntekeningSID left JOIN opdracht on opdracht.OpdrachtID = i.opdrachtid left join student on student.StudentID = i.studentID left join bedrijf on bedrijf.BedrijfID = opdracht.bedrijfid left join opdracht_status ON opdracht_status.OpdrachtSID = opdracht.opdrachtstatusid', id).then(rows => { 
+		console.log(rows);
+		res.send(JSON.stringify(rows));
+	});
+});
+
+router.get('/all', function(req, res, next) {
+	database.query('SELECT * FROM intekening left JOIN intekening_status ON intekening.intekeningstatusid = intekening_status.IntekeningSID left JOIN opdracht on opdracht.OpdrachtID = intekening.opdrachtid left join student on student.StudentID = intekening.studentID left join bedrijf on bedrijf.BedrijfID = opdracht.bedrijfid left join opdracht_status ON opdracht_status.OpdrachtSID = opdracht.opdrachtstatusid').then(rows => { 
 		console.log(rows);
 		res.send(JSON.stringify(rows));
 	});

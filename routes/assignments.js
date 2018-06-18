@@ -49,8 +49,6 @@ router.get('/image/:id', function(req, res, next) {
 	});
 });
 
-
-
 //Delete assignment by assignmentid
 router.get('/delete/:id', function(req, res, next) {
 	var id = req.params.id;
@@ -68,10 +66,17 @@ router.get('/statuses', function(req, res, next) {
 });
 
 ///Get assignment by id
-router.get('/:id', function(req, res, next) {
+router.get('/byid/:id', function(req, res, next) {
 	var id = req.params.id;
 	let assignments;
 	database.query("SELECT * FROM (SELECT * FROM opdracht WHERE opdrachtID = ? ) AS o LEFT JOIN opdracht_status ON o.opdrachtstatusid = opdracht_status.OpdrachtSID LEFT JOIN bedrijf ON o.bedrijfid = bedrijf.BedrijfID", id).then(rows => { 
+		res.send(JSON.stringify(rows));
+	});
+});
+
+///Get availible assignments
+router.get('/availible', function(req, res, next) {
+	database.query("SELECT * FROM (SELECT * FROM opdracht WHERE opdrachtstatusid = 1) AS o LEFT JOIN opdracht_status ON o.opdrachtstatusid = opdracht_status.OpdrachtSID LEFT JOIN bedrijf ON o.bedrijfid = bedrijf.BedrijfID").then(rows => { 
 		res.send(JSON.stringify(rows));
 	});
 });
@@ -82,7 +87,7 @@ router.post('/update/:id',upload.single('opdrachtAfbeelding'), function(req, res
 	var body = req.body;
 	console.log(body);
 	if(req.file != undefined){
-		database.query("UPDATE opdracht SET titel = ?, beschrijving = ?, ec = ?, opdrachtstatusid = ?, opdrachtafbeelding = ? WHERE OpdrachtID = ?", [body.titel, body.beschrijving, body.ec, body.opdrachtstatusid, req.file.path, id]).then(rows => { 
+		database.query("UPDATE opdracht SET titel = ?, beschrijving = ?, ec = ?, opdrachtstatusid = ?, opdrachtafbeelding = ? WHERE OpdrachtID = ?", [body.titel, body.beschrijving, body.ec, body.opdrachtstatusid, file.path.replace(/\\/g, "/"), id]).then(rows => { 
 			res.send(JSON.stringify(rows));
 		});
 	}
@@ -98,7 +103,7 @@ router.post('/post', upload.single('opdrachtAfbeelding'),function(req, res, next
 	var body = req.body;
 	console.log(req.file);
 	console.log(body);
-	database.query("INSERT INTO opdracht (titel, beschrijving, ec, opdrachtstatusid, bedrijfid, opdrachtAfbeelding) VALUES (?,?,?,?,?,?)", [body.titel, body.beschrijving, body.ec, body.opdrachtstatusid, body.bedrijfid, req.file.path]).then(rows => { 
+	database.query("INSERT INTO opdracht (titel, beschrijving, ec, opdrachtstatusid, bedrijfid, opdrachtAfbeelding) VALUES (?,?,?,?,?,?)", [body.titel, body.beschrijving, body.ec, body.opdrachtstatusid, body.bedrijfid, req.file.path.replace(/\\/g, "/")]).then(rows => { 
 		res.send(JSON.stringify(rows));
 	});
 });
@@ -106,7 +111,7 @@ router.post('/post', upload.single('opdrachtAfbeelding'),function(req, res, next
 //Upload assignmentimage by assignmentid
 router.post('/uploadimage/:id', upload.single('opdrachtAfbeelding'),function(req, res, next) {
 	var id = req.params.id;
-	database.query("INSERT INTO opdracht_afbeelding (pad, opdrachtid) VALUES (?,?)", [req.file.path, id]).then(rows => { 
+	database.query("INSERT INTO opdracht_afbeelding (pad, opdrachtid) VALUES (?,?)", [req.file.path.replace(/\\/g, "/"), id]).then(rows => { 
 		res.send(JSON.stringify(rows));
 	});
 });
@@ -138,7 +143,7 @@ router.post('/uploadimages/:id', upload.array("opdrachtAfbeeldingen"),function(r
 	console.log(req.files);
 	req.files.forEach(file => {
 		console.log(file);
-		database.query("INSERT INTO opdracht_afbeelding (pad, opdrachtid) VALUES (?,?)", [file.path, id]).then(rows => { 
+		database.query("INSERT INTO opdracht_afbeelding (pad, opdrachtid) VALUES (?,?)", [file.path.replace(/\\/g, "/"), id]).then(rows => { 
 			
 		});
 	});
