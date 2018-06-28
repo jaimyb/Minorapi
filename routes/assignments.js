@@ -41,6 +41,14 @@ router.get('/', function(req, res, next) {
 	});
 });
 
+router.get('/all/:year', function(req, res, next) {
+	console.log(req.headers);
+	database.query('SELECT * FROM opdracht LEFT JOIN opdracht_status ON opdracht.opdrachtstatusid = opdracht_status.OpdrachtSID LEFT JOIN bedrijf ON opdracht.bedrijfid = bedrijf.BedrijfID WHERE schooljaar = ?',[req.params.year]).then(rows => { 
+		console.log(rows);
+		res.send(JSON.stringify(rows));
+	});
+});
+
 //Get image by id
 router.get('/image/:id', function(req, res, next) {
 	var id = req.params.id;
@@ -65,6 +73,38 @@ router.get('/statuses', function(req, res, next) {
 	});
 });
 
+router.get('/schoolyears', function(req, res, next) {
+	let jaar = GetSchoolyear();
+	database.query('SELECT schooljaar FROM schooljaar', [jaar]).then(rows => { 
+		res.send(JSON.stringify(rows));
+	});
+});
+
+router.get('/byschoolyear/:year', function(req, res, next) {
+	let year = req.params.year;
+	database.query('SELECT * FROM opdracht LEFT JOIN opdracht_status ON opdracht.opdrachtstatusid = opdracht_status.OpdrachtSID LEFT JOIN bedrijf ON opdracht.bedrijfid = bedrijf.BedrijfID WHERE schooljaar = ?', [year]).then(rows => { 
+		console.log(rows);
+		res.send(JSON.stringify(rows));
+	});
+});
+
+function GetSchoolyear(){
+    let year = Number(new Date().getFullYear());
+    if(new Date().getMonth() < 7){
+      return (year - 1).toString() + '-' + year.toString(); 
+    }
+    else{
+      return year.toString() + '-' + (year + 1).toString(); 
+    }
+  }
+
+router.get('/semesters', function(req, res, next) {
+	database.query('SELECT * FROM semester').then(rows => { 
+		console.log(rows);
+		res.send(JSON.stringify(rows));
+	});
+});
+
 ///Get assignment by id
 router.get('/byid/:id', function(req, res, next) {
 	var id = req.params.id;
@@ -74,9 +114,15 @@ router.get('/byid/:id', function(req, res, next) {
 	});
 });
 
+router.get('/bycompanyid/:id/:year', function(req, res, next) {
+	database.query("SELECT * FROM (SELECT * FROM opdracht WHERE bedrijfid = ? ) AS o LEFT JOIN opdracht_status ON o.opdrachtstatusid = opdracht_status.OpdrachtSID LEFT JOIN bedrijf ON o.bedrijfid = bedrijf.BedrijfID", [req.params.id, req.params.year]).then(rows => { 
+		res.send(JSON.stringify(rows));
+	});
+});
+
 ///Get availible assignments
-router.get('/availible', function(req, res, next) {
-	database.query("SELECT * FROM (SELECT * FROM opdracht WHERE opdrachtstatusid = 1) AS o LEFT JOIN opdracht_status ON o.opdrachtstatusid = opdracht_status.OpdrachtSID LEFT JOIN bedrijf ON o.bedrijfid = bedrijf.BedrijfID").then(rows => { 
+router.get('/availible/:year', function(req, res, next) {
+	database.query("SELECT * FROM (SELECT * FROM opdracht WHERE opdrachtstatusid = 1) AS o LEFT JOIN opdracht_status ON o.opdrachtstatusid = opdracht_status.OpdrachtSID LEFT JOIN bedrijf ON o.bedrijfid = bedrijf.BedrijfID WHERE schooljaar = ?",[req.params.year]).then(rows => { 
 		res.send(JSON.stringify(rows));
 	});
 });
@@ -87,12 +133,12 @@ router.post('/update/:id',upload.single('opdrachtAfbeelding'), function(req, res
 	var body = req.body;
 	console.log(body);
 	if(req.file != undefined){
-		database.query("UPDATE opdracht SET titel = ?, beschrijving = ?, ec = ?, opdrachtstatusid = ?, opdrachtafbeelding = ? WHERE OpdrachtID = ?", [body.titel, body.beschrijving, body.ec, body.opdrachtstatusid, file.path.replace(/\\/g, "/"), id]).then(rows => { 
+		database.query("UPDATE opdracht SET titel = ?, beschrijving = ?, ec = ?, opdrachtstatusid = ?, opdrachtafbeelding = ?, semester = ?, schooljaar = ? WHERE OpdrachtID = ?", [body.titel, body.beschrijving, body.ec, body.opdrachtstatusid, file.path.replace(/\\/g, "/"), body.semester, body.schooljaar, id]).then(rows => { 
 			res.send(JSON.stringify(rows));
 		});
 	}
 	else{
-		database.query("UPDATE opdracht SET titel = ?, beschrijving = ?, ec = ?, opdrachtstatusid = ? WHERE OpdrachtID = ?", [body.titel, body.beschrijving, body.ec, body.opdrachtstatusid, id]).then(rows => { 
+		database.query("UPDATE opdracht SET titel = ?, beschrijving = ?, ec = ?, opdrachtstatusid = ?, semester = ?, schooljaar = ? WHERE OpdrachtID = ?", [body.titel, body.beschrijving, body.ec, body.opdrachtstatusid, body.semester, body.schooljaar, id]).then(rows => { 
 			res.send(JSON.stringify(rows));
 		});
 	}
@@ -101,9 +147,7 @@ router.post('/update/:id',upload.single('opdrachtAfbeelding'), function(req, res
 //Post new assignment
 router.post('/post', upload.single('opdrachtAfbeelding'),function(req, res, next) {
 	var body = req.body;
-	console.log(req.file);
-	console.log(body);
-	database.query("INSERT INTO opdracht (titel, beschrijving, ec, opdrachtstatusid, bedrijfid, opdrachtAfbeelding) VALUES (?,?,?,?,?,?)", [body.titel, body.beschrijving, body.ec, body.opdrachtstatusid, body.bedrijfid, req.file.path.replace(/\\/g, "/")]).then(rows => { 
+	database.query("INSERT INTO opdracht (titel, beschrijving, ec, opdrachtstatusid, bedrijfid, opdrachtAfbeelding, semester, schooljaar) VALUES (?,?,?,?,?,?,?,?)", [body.titel, body.beschrijving, body.ec, body.opdrachtstatusid, body.bedrijfid, req.file.path.replace(/\\/g, "/"), body.semester, body.schooljaar]).then(rows => { 
 		res.send(JSON.stringify(rows));
 	});
 });
@@ -111,6 +155,7 @@ router.post('/post', upload.single('opdrachtAfbeelding'),function(req, res, next
 //Upload assignmentimage by assignmentid
 router.post('/uploadimage/:id', upload.single('opdrachtAfbeelding'),function(req, res, next) {
 	var id = req.params.id;
+	console.log(body);
 	database.query("INSERT INTO opdracht_afbeelding (pad, opdrachtid) VALUES (?,?)", [req.file.path.replace(/\\/g, "/"), id]).then(rows => { 
 		res.send(JSON.stringify(rows));
 	});
