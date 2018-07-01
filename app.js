@@ -10,12 +10,18 @@ var companiesRouter = require('./routes/companies');
 var studentsRouter = require('./routes/students');
 var subscriptionsRouter = require('./routes/subscriptions');
 var authenicationRouter = require('./routes/authentication');
+const jwt = require('jsonwebtoken');
+var helmet = require('helmet');
+var fs = require('fs');
 
-var cors = require('cors')
+
+var cors = require('cors');
 
 var app = express();
 
 var mysql = require('mysql');
+
+app.use(helmet());
 
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -24,6 +30,28 @@ app.use(function(req, res, next) {
 });
 
 app.use('/uploads', express.static('uploads'));
+
+app.all('/uploads/*', function(req, res, next) {
+  if(!req.headers.authorization){
+
+    res.send({succes: false, result: "No token"})
+  }
+  else{
+    fs.readFile(path.resolve("bin/secret.txt") ,'utf8', function(err, data) {
+
+      if (err){
+        res.send({succes: false, result: "Somethings wrong with secret"})
+      }
+      jwt.verify(token, supersecretcode, function(err, decoded){
+        if(!err){
+            res.send(JSON.stringify({success: true, msg: "Access granted"}));
+        } else {
+          res.send(err);
+        }
+    });
+    });
+  }
+})
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

@@ -82,6 +82,7 @@ router.get('/schoolyears', function(req, res, next) {
 
 router.get('/byschoolyear/:year', function(req, res, next) {
 	let year = req.params.year;
+	console.log(req.headers);
 	database.query('SELECT * FROM opdracht LEFT JOIN opdracht_status ON opdracht.opdrachtstatusid = opdracht_status.OpdrachtSID LEFT JOIN bedrijf ON opdracht.bedrijfid = bedrijf.BedrijfID WHERE schooljaar = ?', [year]).then(rows => { 
 		console.log(rows);
 		res.send(JSON.stringify(rows));
@@ -194,5 +195,26 @@ router.post('/uploadimages/:id', upload.array("opdrachtAfbeeldingen"),function(r
 	});
 	res.send(JSON.stringify({true: true}));
 });
+
+//Get image for assignment
+router.get('/assignmentimage/:id', function(req, res, next) {
+	var id = req.params.id;
+	database.query("SELECT opdrachtafbeelding FROM opdracht WHERE OpdrachtID = ?", [id]).then(rows => {
+		res.sendFile(path.resolve(rows[0].opdrachtafbeelding));
+	}).catch(rows =>{
+		res.send(JSON.stringify({success: false, result: "Er is een onbekende fout opgetreden!"}));
+	});
+});
+
+//Get images for assignment
+router.get('/assignmentimages/:id', function(req, res, next) {
+	var id = req.params.id;
+	database.query("SELECT pad FROM opdracht_afbeelding WHERE OpdrachtAfbeeldingID = ?", [id]).then(rows => {
+		res.sendFile(path.resolve(rows[0].pad));
+	}).catch(rows =>{
+		res.send(JSON.stringify({success: false, result: "Er is een onbekende fout opgetreden!"}));
+	});
+});
+
 
 module.exports = router;
