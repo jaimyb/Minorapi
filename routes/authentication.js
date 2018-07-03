@@ -107,9 +107,9 @@ router.post('/authenticate', function (req, res, next) {
 });
 
 
-
 router.post('/authenticatejwt', function (req, res, next) {
     console.log(req.body.token);
+    req.headers
     if (!req.body.token) {
         res.json({ success: false, msg: 'Please pass jwttoken' });
     }

@@ -13,6 +13,7 @@ var authenicationRouter = require('./routes/authentication');
 const jwt = require('jsonwebtoken');
 var helmet = require('helmet');
 var fs = require('fs');
+var compression = require('compression');
 
 
 var cors = require('cors');
@@ -22,36 +23,16 @@ var app = express();
 var mysql = require('mysql');
 
 app.use(helmet());
+app.use(compression());
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
 });
 
 app.use('/uploads', express.static('uploads'));
-
-app.all('/uploads/*', function(req, res, next) {
-  if(!req.headers.authorization){
-
-    res.send({succes: false, result: "No token"})
-  }
-  else{
-    fs.readFile(path.resolve("bin/secret.txt") ,'utf8', function(err, data) {
-
-      if (err){
-        res.send({succes: false, result: "Somethings wrong with secret"})
-      }
-      jwt.verify(token, supersecretcode, function(err, decoded){
-        if(!err){
-            res.send(JSON.stringify({success: true, msg: "Access granted"}));
-        } else {
-          res.send(err);
-        }
-    });
-    });
-  }
-})
+app.use('/public', express.static('public'));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -75,12 +56,12 @@ app.use(cors());
 
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};

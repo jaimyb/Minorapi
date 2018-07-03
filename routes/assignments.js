@@ -14,7 +14,6 @@ const storage = multer.diskStorage({
 	},
 	filename: function (req, file, cb) {
 		crypto.pseudoRandomBytes(16, function (err, raw) {
-			console.log(file.originalname);
 		  cb(null, raw.toString('hex') + Date.now() + file.originalname);
 		});
 	}
@@ -34,17 +33,13 @@ let database = new Database();
 
 //Get all assignments
 router.get('/', function(req, res, next) {
-	console.log(req.headers);
 	database.query('SELECT * FROM opdracht LEFT JOIN opdracht_status ON opdracht.opdrachtstatusid = opdracht_status.OpdrachtSID LEFT JOIN bedrijf ON opdracht.bedrijfid = bedrijf.BedrijfID').then(rows => { 
-		console.log(rows);
 		res.send(JSON.stringify(rows));
 	});
 });
 
 router.get('/all/:year', function(req, res, next) {
-	console.log(req.headers);
 	database.query('SELECT * FROM opdracht LEFT JOIN opdracht_status ON opdracht.opdrachtstatusid = opdracht_status.OpdrachtSID LEFT JOIN bedrijf ON opdracht.bedrijfid = bedrijf.BedrijfID WHERE schooljaar = ?',[req.params.year]).then(rows => { 
-		console.log(rows);
 		res.send(JSON.stringify(rows));
 	});
 });
@@ -68,7 +63,6 @@ router.get('/delete/:id', function(req, res, next) {
 //Get all possible assignment status
 router.get('/statuses', function(req, res, next) {
 	database.query('SELECT * FROM opdracht_status').then(rows => { 
-		console.log(rows);
 		res.send(JSON.stringify(rows));
 	});
 });
@@ -82,9 +76,7 @@ router.get('/schoolyears', function(req, res, next) {
 
 router.get('/byschoolyear/:year', function(req, res, next) {
 	let year = req.params.year;
-	console.log(req.headers);
 	database.query('SELECT * FROM opdracht LEFT JOIN opdracht_status ON opdracht.opdrachtstatusid = opdracht_status.OpdrachtSID LEFT JOIN bedrijf ON opdracht.bedrijfid = bedrijf.BedrijfID WHERE schooljaar = ?', [year]).then(rows => { 
-		console.log(rows);
 		res.send(JSON.stringify(rows));
 	});
 });
@@ -101,7 +93,6 @@ function GetSchoolyear(){
 
 router.get('/semesters', function(req, res, next) {
 	database.query('SELECT * FROM semester').then(rows => { 
-		console.log(rows);
 		res.send(JSON.stringify(rows));
 	});
 });
@@ -132,7 +123,6 @@ router.get('/availible/:year', function(req, res, next) {
 router.post('/update/:id',upload.single('opdrachtAfbeelding'), function(req, res, next) {
 	var id = req.params.id;
 	var body = req.body;
-	console.log(body);
 	if(req.file != undefined){
 		database.query("UPDATE opdracht SET titel = ?, beschrijving = ?, ec = ?, opdrachtstatusid = ?, opdrachtafbeelding = ?, semester = ?, schooljaar = ? WHERE OpdrachtID = ?", [body.titel, body.beschrijving, body.ec, body.opdrachtstatusid, file.path.replace(/\\/g, "/"), body.semester, body.schooljaar, id]).then(rows => { 
 			res.send(JSON.stringify(rows));
@@ -156,7 +146,6 @@ router.post('/post', upload.single('opdrachtAfbeelding'),function(req, res, next
 //Upload assignmentimage by assignmentid
 router.post('/uploadimage/:id', upload.single('opdrachtAfbeelding'),function(req, res, next) {
 	var id = req.params.id;
-	console.log(body);
 	database.query("INSERT INTO opdracht_afbeelding (pad, opdrachtid) VALUES (?,?)", [req.file.path.replace(/\\/g, "/"), id]).then(rows => { 
 		res.send(JSON.stringify(rows));
 	});
@@ -186,9 +175,7 @@ router.get('/deleteimage/:id', function(req, res, next) {
 //Upload multiple images by id
 router.post('/uploadimages/:id', upload.array("opdrachtAfbeeldingen"),function(req, res, next){
 	var id = req.params.id;
-	console.log(req.files);
 	req.files.forEach(file => {
-		console.log(file);
 		database.query("INSERT INTO opdracht_afbeelding (pad, opdrachtid) VALUES (?,?)", [file.path.replace(/\\/g, "/"), id]).then(rows => { 
 			
 		});
